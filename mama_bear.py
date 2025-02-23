@@ -56,9 +56,7 @@ else:
 # --- Login/SignUp Sidebar ---
 def show_auth_form():
     choice = st.sidebar.selectbox('Login/Signup', ['Login', 'Sign up'])
-    st.title("Welcome to Mama Bear!")
-    st.image("mama_bear_logo.png")
-    st.write("Mama Bear is a pregnancy app for mothers who want to track their risk level over their pregnancy. Input age, blood pressure, blood sugar, temperature, and heart rate and Mama Bear will output whether you are at low, medium, or high risk. All data is stored in your user account so you can see how your health changes over the course of your pregnancy. No more stressing about your health, just use Mama Bear for quick care. ")
+    
 
 
     email = st.sidebar.text_input('Please enter your email address')
@@ -76,7 +74,7 @@ def show_auth_form():
                 # After successful sign-up, log the user in
                 user = auth.sign_in_with_email_and_password(email, password)
                 st.session_state['logged_in'] = True
-                #st.session_state['user_handle'] = email  # Store handle in session
+                st.session_state['user_handle'] = email  # Store handle in session
                 st.rerun()  # Rerun to load the main app page
             except Exception as e:
                 st.error("Username already exists")
@@ -94,6 +92,10 @@ def show_auth_form():
             except Exception as e:
                 # If login fails, show a general error message
                 st.error("Incorrect Username/Passowrd")  # Show the error message from Firebase or network issues
+
+    st.title("Welcome to Mama Bear!")
+    st.image("mama_bear_logo.png")
+    st.write("Mama Bear is a pregnancy app for mothers who want to track their risk level over their pregnancy. Input age, blood pressure, blood sugar, temperature, and heart rate and Mama Bear will output whether you are at low, medium, or high risk. All data is stored in your user account so you can see how your health changes over the course of your pregnancy. No more stressing about your health, just use Mama Bear for quick care. ")
 # --- Main App (after login) ---
 def show_main_app():
     with open('mama_bear.pkl', 'rb') as file:
