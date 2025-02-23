@@ -1,3 +1,8 @@
 streamlit
 xgboost
 pandas
+pyrebase4
+pyrebase
+pycryptodome
+pickle-mixin
+pathlib
