@@ -33,6 +33,7 @@ firebase = pyrebase.initialize_app(firebaseConfig)
 auth = firebase.auth()
 
 firestore_db = firestore.client()
+firestore_db = firestore.client()
 
 # Database
 db = firebase.database()
@@ -49,7 +50,7 @@ if st.session_state['logged_in']:
 else:
     st.set_page_config(page_title="Login", layout="centered")
 
-userEmail = None
+
 
 # --- Login/SignUp Sidebar ---
 def show_auth_form():
@@ -70,7 +71,6 @@ def show_auth_form():
                 # After successful sign-up, log the user in
                 user = auth.sign_in_with_email_and_password(email, password)
                 st.session_state['logged_in'] = True
-                userEmail = user.email
                 #st.session_state['user_handle'] = email  # Store handle in session
                 st.rerun()  # Rerun to load the main app page
             except Exception as e:
@@ -85,7 +85,6 @@ def show_auth_form():
                 user = auth.sign_in_with_email_and_password(email, password)
                 st.session_state['logged_in'] = True
                 st.session_state['user_handle'] = email  # Store email or handle in session
-                userEmail = user.email
                 st.rerun()  # Rerun to load the main app page
             except Exception as e:
                 # If login fails, show a general error message
@@ -107,6 +106,7 @@ def show_main_app():
 
     if st.button("Predict"):
         try:
+            # Create an array of input data
             features = np.array([[float(age), float(sysBP), float(diaBP), float(bs), float(temp), float(hr)]])
             prediction = model.predict(features)
             if prediction[0] == 0:
@@ -124,27 +124,31 @@ def show_main_app():
                 st.write("Please take care and monitor your health.")
             else:
                 st.write("Please consult a healthcare provider.")
+                
+            # Save user data to Firestore as a new document in a subcollection
+            user_data = {
+                "age": age,
+                "systolic_bp": sysBP,
+                "diastolic_bp": diaBP,
+                "blood_sugar": bs,
+                "temperature": temp,
+                "heart_rate": hr,
+                "risk_level": risk,
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+
+            # Create a new document in the "submissions" subcollection for each user
+            user_ref = firestore_db.collection("users").document(st.session_state['user_handle'])
+            submissions_ref = user_ref.collection("submissions")
+            submissions_ref.add(user_data)  # Add each new form submission as a new document
+
+            st.success("Your data has been saved to Firestore!")
+            
         except ValueError:
             st.error("Please enter valid numerical values for all fields.")
 
-        user = firebase_admin.auth.get_user_by_email(st.session_state['user_handle']) # Fetch the Firebase user by email
-        user_data = {
-            "age": age,
-            "systolic_BP": sysBP,
-            "diastolic_BP": diaBP,
-            "blood_sugar": bs,
-            "temperature": temp,
-            "heart_rate": hr,
-            "risk_level": risk,
-        }
-
-        user_ref = firestore_db.collection("users").document(user.uid) # Use Firebase user UID as the document ID
-        user_ref.set(user_data)
-
-        st.success("Your data has been saved successfully!")
-
     # Logout button
-    if st.button("Log out"):
+    if st.sidebar.button("Log out"):
         st.session_state['logged_in'] = False
         st.session_state.pop('user_handle', None)  # Clear user handle
         st.rerun()  # Rerun to show login page again
