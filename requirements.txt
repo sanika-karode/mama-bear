@@ -6,3 +6,4 @@ pyrebase
 pycryptodome
 pickle-mixin
 pathlib
+firebase_admin

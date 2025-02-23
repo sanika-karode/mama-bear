@@ -1,8 +1,16 @@
 import streamlit as st
 import numpy as np
 import pickle
-import pyrebase
+from pathlib import Path
+from pyrebase import pyrebase
 from datetime import datetime
+import firebase_admin
+from firebase_admin import credentials, firestore, auth
+
+
+if not firebase_admin._apps:
+    cred = credentials.Certificate('mama-bear-d5cfb-firebase-adminsdk-fbsvc-8f89bde688.json') # Provide your Firebase Admin SDK credentials
+    firebase_admin.initialize_app(cred)
 
 # Firebase Configuration
 firebaseConfig = {
@@ -20,6 +28,17 @@ firebaseConfig = {
 firebase = pyrebase.initialize_app(firebaseConfig)
 auth = firebase.auth()
 
+# Firebase Authentication
+firebase = pyrebase.initialize_app(firebaseConfig)
+auth = firebase.auth()
+
+firestore_db = firestore.client()
+
+# Database
+db = firebase.database()
+storage = firebase.storage()
+
+
 # --- USER AUTHENTICATION --- 
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False  # Track login state
@@ -29,6 +48,8 @@ if st.session_state['logged_in']:
     st.set_page_config(page_title="Main App", layout="centered", initial_sidebar_state="collapsed")
 else:
     st.set_page_config(page_title="Login", layout="centered")
+
+userEmail = None
 
 # --- Login/SignUp Sidebar ---
 def show_auth_form():
@@ -49,6 +70,7 @@ def show_auth_form():
                 # After successful sign-up, log the user in
                 user = auth.sign_in_with_email_and_password(email, password)
                 st.session_state['logged_in'] = True
+                userEmail = user.email
                 #st.session_state['user_handle'] = email  # Store handle in session
                 st.rerun()  # Rerun to load the main app page
             except Exception as e:
@@ -63,6 +85,7 @@ def show_auth_form():
                 user = auth.sign_in_with_email_and_password(email, password)
                 st.session_state['logged_in'] = True
                 st.session_state['user_handle'] = email  # Store email or handle in session
+                userEmail = user.email
                 st.rerun()  # Rerun to load the main app page
             except Exception as e:
                 # If login fails, show a general error message
@@ -103,6 +126,22 @@ def show_main_app():
                 st.write("Please consult a healthcare provider.")
         except ValueError:
             st.error("Please enter valid numerical values for all fields.")
+
+        user = firebase_admin.auth.get_user_by_email(st.session_state['user_handle']) # Fetch the Firebase user by email
+        user_data = {
+            "age": age,
+            "systolic_BP": sysBP,
+            "diastolic_BP": diaBP,
+            "blood_sugar": bs,
+            "temperature": temp,
+            "heart_rate": hr,
+            "risk_level": risk,
+        }
+
+        user_ref = firestore_db.collection("users").document(user.uid) # Use Firebase user UID as the document ID
+        user_ref.set(user_data)
+
+        st.success("Your data has been saved successfully!")
 
     # Logout button
     if st.button("Log out"):
