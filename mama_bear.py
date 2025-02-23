@@ -1,6 +1,7 @@
 import streamlit as st
 import numpy as np
 import pickle
+import pandas as pd
 from pathlib import Path
 from pyrebase import pyrebase
 from datetime import datetime
@@ -146,6 +147,35 @@ def show_main_app():
             
         except ValueError:
             st.error("Please enter valid numerical values for all fields.")
+
+    # --- Show Button to Display Previous Submissions ---
+    show_past_data_button = st.sidebar.button("Show My Past Data")
+
+    if show_past_data_button:
+        # Fetch previous submissions
+        user_ref = firestore_db.collection("users").document(st.session_state['user_handle'])
+        submissions_ref = user_ref.collection("submissions")
+        submissions = submissions_ref.stream()
+
+        # Convert Firestore data to a pandas DataFrame
+        submission_data = []
+        for submission in submissions:
+            data = submission.to_dict()
+            submission_data.append(data)
+
+        if submission_data:
+            # Convert list of dicts to DataFrame
+            df = pd.DataFrame(submission_data)
+
+            column_order = ['timestamp'] + ['age'] + ['systolic_bp'] + ['blood_sugar'] + ['diastolic_bp']+['temperature'] +['heart_rate']+['risk_level']
+            
+            
+            df = df[column_order]
+            st.write("### Your Previous Submissions")
+            st.dataframe(df)  # Display data in a nice table
+        else:
+            st.write("No previous submissions found.")
+
 
     # Logout button
     if st.sidebar.button("Log out"):
