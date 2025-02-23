@@ -56,6 +56,10 @@ else:
 # --- Login/SignUp Sidebar ---
 def show_auth_form():
     choice = st.sidebar.selectbox('Login/Signup', ['Login', 'Sign up'])
+    st.title("Welcome to Mama Bear!")
+    st.image("mama_bear_logo.png")
+    st.write("Mama Bear is a pregnancy app for mothers who want to track their risk level over their pregnancy. Input age, blood pressure, blood sugar, temperature, and heart rate and Mama Bear will output whether you are at low, medium, or high risk. All data is stored in your user account so you can see how your health changes over the course of your pregnancy. No more stressing about your health, just use Mama Bear for quick care. ")
+
 
     email = st.sidebar.text_input('Please enter your email address')
     password = st.sidebar.text_input('Please enter your password', type='password')
@@ -122,9 +126,9 @@ def show_main_app():
             if risk == "Low Risk":
                 st.write("You're all good. Keep going mama!")
             elif risk == "Medium Risk":
-                st.write("Please take care and monitor your health.")
+                st.write("Continue monitoring conditions to ensure they don’t worsen. Make sure to get enough rest, hydrate, manage stress, and engage in low impact physical activity such as walking or swimming. Please consult a doctor with your symptoms at your next checkup. Keep going mama!")
             else:
-                st.write("Please consult a healthcare provider.")
+                st.write("Consult your doctor immediately. Continue monitoring regularly. Stay in a controlled environment and watch for sudden symptoms. Stay calm mama. ")
                 
             # Save user data to Firestore as a new document in a subcollection
             user_data = {
@@ -143,7 +147,7 @@ def show_main_app():
             submissions_ref = user_ref.collection("submissions")
             submissions_ref.add(user_data)  # Add each new form submission as a new document
 
-            st.success("Your data has been saved to Firestore!")
+            #st.success("Your data has been saved to Firestore!")
             
         except ValueError:
             st.error("Please enter valid numerical values for all fields.")
